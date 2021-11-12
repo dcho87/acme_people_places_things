@@ -1,8 +1,8 @@
 const Sequelize = require('sequelize')
-const { DataTypes: { STRING, ENUM } } = Sequelize;
+const { DataTypes: { STRING} } = Sequelize;
 const conn = new Sequelize(process.env.DATABASE || 'postgres://localhost/acme_people_places_things_db');
 
-const People = conn.define('people', {
+const Person = conn.define('person', {
     name: {
         type: STRING,
         allowNull: false,
@@ -10,7 +10,7 @@ const People = conn.define('people', {
       },
 })
 
-const Places = conn.define('places', {
+const Place = conn.define('place', {
     name: {
         type: STRING,
         allowNull: false,
@@ -18,7 +18,7 @@ const Places = conn.define('places', {
       },
 })
 
-const Things = conn.define('things', {
+const Thing = conn.define('thing', {
     name: {
         type: STRING,
         allowNull: false,
@@ -27,17 +27,12 @@ const Things = conn.define('things', {
 })
 
 const Souvenir = conn.define(`souvenir`, {
-    souvenir: {
-      type: ENUM(`foo`, `bar`, `bazz`),
-    },
   });
 
-Souvenir.belongsTo(People)
-Souvenir.belongsTo(Places)
-Souvenir.belongsTo(Things)
-People.hasMany(Souvenir)
-Places.hasMany(Souvenir)
-Things.hasMany(Souvenir)
+Person.hasMany(Souvenir)
+Souvenir.belongsTo(Person)
+Souvenir.belongsTo(Place)
+Souvenir.belongsTo(Thing)
 
 const data = {
     people: ['moe', 'larry', 'lucy', 'ethyl'],
@@ -48,23 +43,18 @@ const data = {
   const syncAndSeed = async() => {
     try{
         await conn.sync({ force: true });
-        const people = await Promise.all(
+        await Promise.all(
             data.people.map(name => 
-                People.create({name}))
+                Person.create({name}))
         )
-        const places = await Promise.all(
+        await Promise.all(
             data.places.map(name => 
-                Places.create({name}))
+                Place.create({name}))
         )
-        const things = await Promise.all(
+        await Promise.all(
             data.things.map(name => 
-                Things.create({name}))
+                Thing.create({name}))
         )
-        await Promise.all([
-            Souvenir.create({ personId: 1, placeId: 4, souvenir: 'foo'}),
-            Souvenir.create({ personId: 1, placeId: 1, souvenir: 'bar'}),
-            Souvenir.create({ personId: 4, placeId: 2, souvenir: 'bazz'}),
-          ]);
     }
     catch(ex){
         console.log(ex)
@@ -74,9 +64,9 @@ const data = {
   module.exports = {
       syncAndSeed,
       models: {
-          People,
-          Places,
-          Things,
+          Person,
+          Place,
+          Thing,
           Souvenir
       }
   }
